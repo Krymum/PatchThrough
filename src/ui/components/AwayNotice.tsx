@@ -19,7 +19,7 @@ export function AwayNotice({ report, onDismiss }: AwayNoticeProps) {
       : ui.welcomeBackNothing(duration);
 
   return (
-    <div className="banner banner--away" role="status">
+    <div className="note" role="status">
       <p>{text}</p>
       <button type="button" className="button" onClick={onDismiss}>
         {ui.dismiss}

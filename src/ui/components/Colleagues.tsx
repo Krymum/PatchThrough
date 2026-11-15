@@ -17,34 +17,25 @@ export function Colleagues({ state }: ColleaguesProps) {
   const working = activeApprentices(state);
 
   return (
-    <section className="colleagues" aria-labelledby="colleagues-title">
-      <h2 id="colleagues-title">{ui.colleaguesTitle}</h2>
-      <ul className="colleagues__seats">
-        {apprentices.slice(0, hired).map((name, index) => {
-          const present = index < working;
-          return (
-            <li key={name} className={`seat${present ? '' : ' seat--empty'}`}>
-              <svg viewBox="0 0 40 48" aria-hidden="true">
-                {present ? (
-                  <g className="seat__operator">
-                    <circle cx="20" cy="14" r="8" />
-                    <path d="M8 44 Q8 26 20 26 Q32 26 32 44 Z" />
-                    <path className="seat__headset" d="M11 14 Q11 4 20 4 Q29 4 29 14" />
-                  </g>
-                ) : (
-                  <g className="seat__chair">
-                    <rect x="10" y="20" width="20" height="4" rx="1" />
-                    <rect x="12" y="6" width="16" height="14" rx="2" />
-                    <rect x="12" y="24" width="2" height="18" />
-                    <rect x="26" y="24" width="2" height="18" />
-                  </g>
-                )}
-              </svg>
-              <span>{present ? ui.colleagueWorking(name) : ui.colleagueGone(name)}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
+    <ul className="colleagues" aria-label={ui.colleaguesTitle}>
+      {apprentices.slice(0, hired).map((name, index) => {
+        const present = index < working;
+        return (
+          <li key={name} className={present ? 'colleague' : 'colleague colleague--gone'}>
+            <svg viewBox="0 0 20 24" aria-hidden="true">
+              {present ? (
+                <>
+                  <circle cx="10" cy="7" r="5" />
+                  <path d="M2 24 Q2 13 10 13 Q18 13 18 24 Z" />
+                </>
+              ) : (
+                <path d="M4 10h12M5 10v12M15 10v12M6 3h8v7H6z" />
+              )}
+            </svg>
+            {present ? ui.colleagueWorking(name) : ui.colleagueGone(name)}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
