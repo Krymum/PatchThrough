@@ -35,6 +35,7 @@ export function ringingCall(id: number, overrides: Partial<Call> = {}): Call {
     expiresAt: 10_000,
     endsAt: null,
     handler: null,
+    cord: null,
     fragment: null,
     ...overrides,
   };

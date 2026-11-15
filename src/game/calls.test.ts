@@ -175,6 +175,18 @@ describe('connectCall', () => {
     expect(connectCall(state, 99, 'doctor').outcome).toBe('not-ringing');
   });
 
+  it('plugs the call into the lowest free cord pair', () => {
+    const calls = [
+      connectedCall(1, { from: 'grocer', to: 'doctor', cord: 1 }),
+      ringingCall(2, { from: 'school', to: 'hotel' }),
+      ringingCall(3, { from: 'bakery', to: 'garage' }),
+    ];
+    const first = connectCall(stateWith({ calls, upgrades: { cord: 1 } }), 2, 'hotel').state;
+    expect(first.calls.find((c) => c.id === 2)?.cord).toBe(0);
+    const second = connectCall(first, 3, 'garage').state;
+    expect(second.calls.find((c) => c.id === 3)?.cord).toBe(2);
+  });
+
   it("needs a free cord pair, and only counts the operator's own cords", () => {
     const calls = [
       connectedCall(1, { from: 'grocer', to: 'doctor' }),

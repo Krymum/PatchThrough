@@ -36,6 +36,8 @@ export interface Call {
   endsAt: number | null;
   /** Null while ringing. */
   handler: Handler | null;
+  /** Which of the operator's cord pairs carries the call; null for apprentices. */
+  cord: number | null;
   /** The story conversation this call carries, if any. */
   fragment: FragmentId | null;
 }

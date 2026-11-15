@@ -109,6 +109,7 @@ function ring(
     expiresAt: state.clock + patienceMs(state),
     endsAt: null,
     handler: null,
+    cord: null,
     fragment,
   };
   return {
@@ -146,6 +147,15 @@ export function payoutFor(call: Pick<Call, 'from'>): number {
   return CONFIG.districts[districtOf(call.from)].payoutCents;
 }
 
+/** The lowest-numbered cord pair the operator is not using. */
+export function firstFreeCord(state: GameState): number | null {
+  const used = new Set(state.calls.map((call) => call.cord));
+  for (let cord = 0; cord < cordCount(state); cord++) {
+    if (!used.has(cord)) return cord;
+  }
+  return null;
+}
+
 /** Plugs a ringing call through; callers check that the move is allowed. */
 function plug(state: GameState, call: Call, handler: Handler): StepResult {
   const { minDurationMs, maxDurationMs } = CONFIG.calls;
@@ -157,6 +167,7 @@ function plug(state: GameState, call: Call, handler: Handler): StepResult {
     status: 'connected',
     endsAt: state.clock + length,
     handler,
+    cord: handler === 'player' ? firstFreeCord(state) : null,
   };
   const told = call.fragment ? noteFragmentOffered(state, call.fragment) : state;
   return {
