@@ -4,6 +4,7 @@ import { connectCall, type ConnectOutcome } from '../../game/calls';
 import { CONFIG } from '../../game/config';
 import type { SubscriberId } from '../../game/directory';
 import { advance, createInitialState } from '../../game/engine';
+import { applyOfflineProgress, offlineProgress, type OfflineReport } from '../../game/offline';
 import { createSeed } from '../../game/rng';
 import { fromSave, toSave, type Settings } from '../../game/save/schema';
 import {
@@ -29,6 +30,7 @@ interface Boot {
   status: LoadResult['status'];
   state: GameState;
   settings: Settings;
+  away: OfflineReport | null;
 }
 
 function boot(): Boot {
@@ -36,11 +38,14 @@ function boot(): Boot {
   const result = loadSave(storage);
   const seed = createSeed();
   if (result.status === 'loaded') {
+    const loaded = fromSave(result.save, seed);
+    const away = offlineProgress(loaded, Date.now() - result.save.savedAt);
     return {
       storage,
       status: result.status,
-      state: fromSave(result.save, seed),
+      state: away ? applyOfflineProgress(loaded, away) : loaded,
       settings: result.save.settings,
+      away,
     };
   }
   return {
@@ -48,6 +53,7 @@ function boot(): Boot {
     status: result.status,
     state: createInitialState(seed),
     settings: { muted: false, locale: detectLocale(navigator.languages) },
+    away: null,
   };
 }
 
@@ -55,6 +61,9 @@ export interface GameController {
   state: GameState;
   settings: Settings;
   bootStatus: LoadResult['status'];
+  /** Earnings made while the page was closed or hidden, until dismissed. */
+  away: OfflineReport | null;
+  dismissAway: () => void;
   connect: (callId: number, target: SubscriberId) => ConnectOutcome;
   buy: (upgrade: UpgradeId) => void;
   updateSettings: (patch: Partial<Settings>) => void;
@@ -64,6 +73,7 @@ export function useGame(onEvents: (events: readonly GameEvent[]) => void): GameC
   const [initial] = useState(boot);
   const [state, setState] = useState(initial.state);
   const [settings, setSettings] = useState(initial.settings);
+  const [away, setAway] = useState(initial.away);
   const stateRef = useRef(initial.state);
   const settingsRef = useRef(initial.settings);
   const onEventsRef = useRef(onEvents);
@@ -105,17 +115,30 @@ export function useGame(onEvents: (events: readonly GameEvent[]) => void): GameC
 
   useEffect(() => {
     const interval = window.setInterval(persist, CONFIG.save.autosaveMs);
-    const onHide = () => {
-      if (document.visibilityState === 'hidden') persist();
+    let hiddenAt: number | null = null;
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        hiddenAt = Date.now();
+        persist();
+        return;
+      }
+      if (hiddenAt === null) return;
+      // Live play paused while hidden; the passive side kept working.
+      const report = offlineProgress(stateRef.current, Date.now() - hiddenAt);
+      hiddenAt = null;
+      if (report) {
+        commit({ state: applyOfflineProgress(stateRef.current, report), events: [] });
+        setAway(report);
+      }
     };
-    document.addEventListener('visibilitychange', onHide);
+    document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('pagehide', persist);
     return () => {
       window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', onHide);
+      document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pagehide', persist);
     };
-  }, [persist]);
+  }, [persist, commit]);
 
   const connect = useCallback(
     (callId: number, target: SubscriberId) => {
@@ -143,5 +166,18 @@ export function useGame(onEvents: (events: readonly GameEvent[]) => void): GameC
     [persist],
   );
 
-  return { state, settings, bootStatus: initial.status, connect, buy, updateSettings };
+  const dismissAway = useCallback(() => {
+    setAway(null);
+  }, []);
+
+  return {
+    state,
+    settings,
+    bootStatus: initial.status,
+    away,
+    dismissAway,
+    connect,
+    buy,
+    updateSettings,
+  };
 }

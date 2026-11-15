@@ -21,7 +21,8 @@ export function noticeFromEvents(events: readonly GameEvent[]): Notice | null {
   for (const event of events) {
     if (event.type === 'call-incoming') notice = { kind: 'incoming', from: event.from };
     if (event.type === 'call-lost') notice = { kind: 'lost', from: event.from };
-    if (event.type === 'call-connected') {
+    // Apprentices' work shows on the board; only the operator's own calls get a line.
+    if (event.type === 'call-connected' && event.handler === 'player') {
       notice = {
         kind: 'connected',
         from: event.from,

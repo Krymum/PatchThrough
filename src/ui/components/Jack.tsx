@@ -1,7 +1,8 @@
 import type { SubscriberId } from '../../game/directory';
 import { useContent } from '../ContentContext';
 
-export type LineState = 'idle' | 'ringing' | 'connected';
+/** A connected line shows who plugged it: the operator, or an apprentice. */
+export type LineState = 'idle' | 'ringing' | 'player' | 'apprentice';
 
 interface JackProps {
   id: SubscriberId;
@@ -19,7 +20,8 @@ const GAUGE_LENGTH = 2 * Math.PI * GAUGE_RADIUS;
 export function Jack({ id, line, patience, selected, awaitingTarget, onPress }: JackProps) {
   const { ui, subscribers } = useContent();
   const name = subscribers[id];
-  const status = { idle: ui.idle, ringing: ui.ringing, connected: ui.onTheLine }[line];
+  const status = line === 'idle' ? ui.idle : line === 'ringing' ? ui.ringing : ui.onTheLine;
+  const connected = line === 'player' || line === 'apprentice';
 
   return (
     <li className="jack-cell">
@@ -29,6 +31,7 @@ export function Jack({ id, line, patience, selected, awaitingTarget, onPress }: 
           awaitingTarget ? ' jack--target' : ''
         }`}
         aria-pressed={selected}
+        data-subscriber={id}
         aria-label={`${name}, ${status}`}
         onClick={() => {
           onPress(id);
@@ -50,7 +53,7 @@ export function Jack({ id, line, patience, selected, awaitingTarget, onPress }: 
           )}
           <circle className="jack__ring" cx="20" cy="60" r="11" />
           <circle className="jack__hole" cx="20" cy="60" r="5" />
-          {line === 'connected' && (
+          {connected && (
             <g className="jack__plug">
               <circle cx="20" cy="60" r="8" />
               <rect x="17" y="60" width="6" height="24" rx="2" />

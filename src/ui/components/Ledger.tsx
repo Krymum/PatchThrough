@@ -4,12 +4,20 @@ import { formatMoney } from '../format';
 
 interface LedgerProps {
   moneyCents: number;
+  /** Income the exchange makes without the operator, in cents per minute. */
+  passivePerMinute: number;
   freeCords: number;
   totalCords: number;
   onLocaleChange: (locale: Locale) => void;
 }
 
-export function Ledger({ moneyCents, freeCords, totalCords, onLocaleChange }: LedgerProps) {
+export function Ledger({
+  moneyCents,
+  passivePerMinute,
+  freeCords,
+  totalCords,
+  onLocaleChange,
+}: LedgerProps) {
   const { ui, locale } = useContent();
   return (
     <header className="ledger">
@@ -21,6 +29,11 @@ export function Ledger({ moneyCents, freeCords, totalCords, onLocaleChange }: Le
         <div>
           <dt>{ui.money}</dt>
           <dd className="ledger__money">{formatMoney(moneyCents, locale)}</dd>
+          {passivePerMinute >= 1 && (
+            <dd className="ledger__passive">
+              {ui.perMinute(formatMoney(Math.round(passivePerMinute), locale))}
+            </dd>
+          )}
         </div>
         <div>
           <dt className="visually-hidden">{ui.cords(freeCords, totalCords)}</dt>

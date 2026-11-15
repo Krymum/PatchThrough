@@ -1,16 +1,26 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CONTENT } from '../content';
 import { freeCords } from '../game/calls';
-import type { SubscriberId } from '../game/directory';
+import {
+  districtOf,
+  subscribersIn,
+  type LocalDistrictId,
+  type SubscriberId,
+} from '../game/directory';
+import { hasEnded, isAutomated, passiveIncomeRate } from '../game/progression';
 import type { GameEvent } from '../game/types';
 import { cordCount } from '../game/upgrades';
 import { ContentContext } from './ContentContext';
+import { AwayNotice } from './components/AwayNotice';
+import { Colleagues } from './components/Colleagues';
 import { Ledger } from './components/Ledger';
 import { OperatorDesk } from './components/OperatorDesk';
 import { Shop } from './components/Shop';
 import { Switchboard } from './components/Switchboard';
 import { useGame } from './hooks/useGame';
 import { noticeFromEvents, type Notice } from './notices';
+
+const MS_PER_MINUTE = 60_000;
 
 export function App() {
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -24,6 +34,7 @@ export function App() {
   const game = useGame(onEvents);
   const { state, settings, bootStatus } = game;
   const content = { ...CONTENT[settings.locale], locale: settings.locale };
+  const ended = hasEnded(state);
 
   // A selected caller who hangs up or gets connected is no longer selectable.
   const selectedCall =
@@ -44,6 +55,14 @@ export function App() {
     };
   }, []);
 
+  const tryConnect = (target: SubscriberId) => {
+    if (!selectedCall) return;
+    const outcome = game.connect(selectedCall.id, target);
+    if (outcome === 'wrong-line') setNotice({ kind: 'wrong-line', to: selectedCall.to });
+    if (outcome === 'no-free-cord') setNotice({ kind: 'no-free-cord' });
+    if (outcome === 'connected') setSelectedId(null);
+  };
+
   const onJackPress = (id: SubscriberId) => {
     if (!selectedCall) {
       const caller = state.calls.find((call) => call.status === 'ringing' && call.from === id);
@@ -54,11 +73,33 @@ export function App() {
       setSelectedId(null);
       return;
     }
-    const outcome = game.connect(selectedCall.id, id);
-    if (outcome === 'wrong-line') setNotice({ kind: 'wrong-line', to: selectedCall.to });
-    if (outcome === 'no-free-cord') setNotice({ kind: 'no-free-cord' });
-    if (outcome === 'connected') setSelectedId(null);
+    tryConnect(id);
   };
+
+  // A cabinet stands for every line of its district: it completes the call
+  // when the callee lives there, and is a wrong jack otherwise.
+  const onCabinetPress = (district: LocalDistrictId) => {
+    if (!selectedCall) return;
+    const target =
+      districtOf(selectedCall.to) === district ? selectedCall.to : subscribersIn(district)[0];
+    if (target) tryConnect(target);
+  };
+
+  const ringing = state.calls.filter((call) => call.status === 'ringing');
+
+  // On small screens the oldest lamp may be scrolled away: select it and bring it into view.
+  const onAnswerNext = () => {
+    const oldest = ringing[0];
+    if (!oldest) return;
+    setSelectedId(oldest.id);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document
+      .querySelector(`[data-subscriber="${oldest.from}"]`)
+      ?.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
+
+  const callee = selectedCall ? districtOf(selectedCall.to) : null;
+  const calleeIsAutomatic = callee !== null && callee !== 'trunk' && isAutomated(state, callee);
 
   const bootMessage =
     bootStatus === 'unavailable'
@@ -72,6 +113,7 @@ export function App() {
       <div className="app">
         <Ledger
           moneyCents={state.moneyCents}
+          passivePerMinute={passiveIncomeRate(state) * MS_PER_MINUTE}
           freeCords={freeCords(state)}
           totalCords={cordCount(state)}
           onLocaleChange={(locale) => {
@@ -83,22 +125,38 @@ export function App() {
             {bootMessage}
           </p>
         )}
+        {game.away && <AwayNotice report={game.away} onDismiss={game.dismissAway} />}
         <main className="app__main">
-          <Switchboard
-            calls={state.calls}
-            clock={state.clock}
-            selectedCall={selectedCall}
-            onJackPress={onJackPress}
-          />
+          {ended ? (
+            <section className="ended" aria-labelledby="ended-title">
+              <h2 id="ended-title">{content.ui.endedTitle}</h2>
+              <p>{content.ui.endedText}</p>
+            </section>
+          ) : (
+            <div className="app__board">
+              <Switchboard
+                state={state}
+                selectedCall={selectedCall}
+                onJackPress={onJackPress}
+                onCabinetPress={onCabinetPress}
+              />
+              <Colleagues state={state} />
+            </div>
+          )}
           <Shop state={state} onBuy={game.buy} />
         </main>
-        <OperatorDesk
-          selectedCall={selectedCall}
-          notice={notice}
-          onCancel={() => {
-            setSelectedId(null);
-          }}
-        />
+        {!ended && (
+          <OperatorDesk
+            selectedCall={selectedCall}
+            calleeIsAutomatic={calleeIsAutomatic}
+            ringingCount={ringing.length}
+            notice={notice}
+            onAnswerNext={onAnswerNext}
+            onCancel={() => {
+              setSelectedId(null);
+            }}
+          />
+        )}
       </div>
     </ContentContext>
   );
