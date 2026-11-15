@@ -9,14 +9,26 @@ It has an ending. The exchange goes fully automatic, the position is
 abolished, and the credits roll. There is no prestige loop and no exploding
 numbers.
 
-> Work in progress: the whole game is playable, from the first lamp to the
-> credits. Sound and final art are on the way.
+**[Play it in your browser](https://krymum.github.io/PatchThrough/)**
+
+![The switchboard in mid-game: Main Street's jacks, Mill Row already behind an automatic switch cabinet, and the supply cupboard](docs/screenshot.png)
 
 ## Play
 
 The game runs in any modern browser, on desktop or phone. Tap (or click) a
-lit lamp to answer, then tap the jack the caller asks for. Keyboard players
-can use <kbd>Tab</kbd>, <kbd>Enter</kbd> and <kbd>Escape</kbd>.
+lit lamp to answer, then tap the jack the caller asks for.
+
+On a keyboard, <kbd>Tab</kbd> and <kbd>Enter</kbd> work everywhere, and a few
+shortcuts save time:
+
+| Key               | Action                                 |
+| ----------------- | -------------------------------------- |
+| <kbd>A</kbd>      | Answer the oldest lit lamp             |
+| <kbd>L</kbd>      | Listen in, or take off the earpiece    |
+| <kbd>Escape</kbd> | Put the caller down, or stop listening |
+
+Sound can be switched off from the speaker button. Animations are dropped
+when your system asks for reduced motion.
 
 Now and then a call carries a conversation worth hearing. Listen in and
 you follow five small stories of the town, but while you listen you cannot
@@ -66,6 +78,7 @@ src/
     story.ts        Plots, story calls and listening in.
     offline.ts      Capped catch-up for time spent away.
     save/           Versioned save format, migrations, guarded storage access.
+  audio/     Sounds synthesised with the Web Audio API, and which events trigger them.
   content/   All player-facing text. English is the reference; French is
              type-checked against it, so a missing string fails the build.
   ui/        React components, styles, and the single hook bridging React
@@ -85,8 +98,13 @@ Issues and pull requests are welcome.
 
 ## Credits
 
-All code, text and graphics are original to this project. Graphics are drawn
-with SVG and CSS; no external images are used. The town of Larkfield and everyone in it are
+All code, text, graphics and sounds are original to this project. Graphics
+are drawn with SVG and CSS and sounds are synthesised in the browser: the
+game uses no bitmap images and no audio files.
+
+The typewriter face is [Courier Prime](https://github.com/quoteunquoteapps/CourierPrime),
+© The Courier Prime Project Authors, used under the SIL Open Font License 1.1
+(see [src/ui/fonts/OFL.txt](src/ui/fonts/OFL.txt)). The town of Larkfield and everyone in it are
 fictional.
 
 ## License
