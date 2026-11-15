@@ -64,7 +64,8 @@ export function toSave(state: GameState, settings: Settings, now: number): Save 
     savedAt: now,
     moneyCents: state.moneyCents,
     upgrades: { ...state.upgrades },
-    stats: { ...state.stats },
+    // Frame timings are fractional; the save stores whole milliseconds.
+    stats: { ...state.stats, playMs: Math.round(state.stats.playMs) },
     settings: { ...settings },
   };
 }

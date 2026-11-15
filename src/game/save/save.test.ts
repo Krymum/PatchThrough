@@ -48,6 +48,13 @@ describe('save schema', () => {
     expect(restored.seed).toBe(77);
   });
 
+  it('produces a valid save after fractional frame times', () => {
+    const played = advance(createInitialState(4), 1_000 / 60).state;
+    const save = toSave(played, settings, 1_700_000_000_000);
+    expect(isSave(save)).toBe(true);
+    expect(save.stats.playMs).toBe(17);
+  });
+
   it('rejects malformed values', () => {
     const save = validSave();
     expect(isSave(save)).toBe(true);
