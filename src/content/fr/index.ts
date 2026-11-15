@@ -1,0 +1,43 @@
+import type { Content } from '../types';
+
+export const fr: Content = {
+  ui: {
+    title: 'Patch Through',
+    tagline: 'Central téléphonique de Larkfield — service de nuit',
+    money: 'Recette',
+    cords: (free, total) => `Cordons libres : ${free} sur ${total}`,
+    boardLabel: 'Standard',
+    ringing: 'appel',
+    onTheLine: 'en ligne',
+    idle: 'calme',
+    hintIdle: 'Quand un voyant s’allume, touchez-le pour répondre.',
+    callerAsks: (caller, callee) => `${caller} : « Passez-moi ${callee}, s’il vous plaît. »`,
+    hintPickLine: 'Touchez maintenant la fiche demandée.',
+    cancel: 'Raccrocher',
+    wrongLine: (callee) => `Mauvaise fiche. On vous a demandé ${callee}.`,
+    noFreeCord: 'Tous les cordons sont pris. Attendez la fin d’une conversation.',
+    connected: (caller, callee, payout) => `${caller} est en ligne avec ${callee}. +${payout}`,
+    callLost: (caller) => `${caller} a raccroché.`,
+    incoming: (caller) => `${caller} appelle.`,
+    shopTitle: 'Armoire à fournitures',
+    upgradeCordName: 'Paire de cordons',
+    upgradeCordDescription: 'Une conversation de plus à la fois.',
+    buyFor: (price) => `Acheter (${price})`,
+    soldOut: 'Le standard n’a plus de place.',
+    language: 'Langue',
+    localeNames: { en: 'English', fr: 'Français' },
+    storageUnavailable:
+      'Votre navigateur bloque le stockage : la progression ne sera pas sauvegardée.',
+    saveRecovered: 'Votre sauvegarde était illisible : un nouveau service commence.',
+  },
+  subscribers: {
+    grocer: 'Épicerie Hollis',
+    doctor: 'Dr Marsh',
+    bakery: 'Boulangerie Kettle',
+    garage: 'Garage Dunn',
+    school: 'École de Larkfield',
+    hotel: 'Hôtel de la Gare',
+    pharmacy: 'Pharmacie Pell',
+    newspaper: 'La Gazette de Larkfield',
+  },
+};
