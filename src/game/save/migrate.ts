@@ -1,3 +1,4 @@
+import { UPGRADE_IDS } from '../types';
 import { CURRENT_SAVE_VERSION, isSave, type Save } from './schema';
 
 /**
@@ -9,7 +10,14 @@ import { CURRENT_SAVE_VERSION, isSave, type Save } from './schema';
  */
 export type Migration = (raw: Record<string, unknown>) => Record<string, unknown>;
 
-export const MIGRATIONS: Readonly<Record<number, Migration>> = {};
+export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  // v1 → v2: the catalogue grew from one upgrade to many; new ones start at zero.
+  1: (v1) => {
+    const old = typeof v1.upgrades === 'object' && v1.upgrades !== null ? v1.upgrades : {};
+    const upgrades = Object.fromEntries(UPGRADE_IDS.map((id) => [id, 0]));
+    return { ...v1, version: 2, upgrades: { ...upgrades, ...old } };
+  },
+};
 
 /**
  * Brings any stored value up to the current save format. Returns null when

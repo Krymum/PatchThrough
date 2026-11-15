@@ -1,6 +1,7 @@
 import { createInitialState } from '../engine';
-import type { GameState, Stats, UpgradeId } from '../types';
-import { UPGRADE_IDS, maxUpgradeLevel } from '../upgrades';
+import { activeApprentices } from '../progression';
+import { UPGRADE_IDS, type GameState, type Stats, type UpgradeId } from '../types';
+import { maxUpgradeLevel } from '../upgrades';
 
 export const LOCALES = ['en', 'fr'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -11,11 +12,25 @@ export interface Settings {
 }
 
 /**
- * Version 1 of the save format. Ringing and connected calls are transient
- * and deliberately not saved: a reloaded board starts quiet.
+ * Version 1 of the save format: the first public release, when the only
+ * upgrade was the cord pair. Kept to document what migrations start from.
  */
 export interface SaveV1 {
   version: 1;
+  savedAt: number;
+  moneyCents: number;
+  upgrades: { cord: number };
+  stats: Stats;
+  settings: Settings;
+}
+
+/**
+ * Version 2: one counter per upgrade of the full catalogue. Ringing and
+ * connected calls are transient and deliberately not saved: a reloaded
+ * board starts quiet.
+ */
+export interface SaveV2 {
+  version: 2;
   /** Wall-clock time of the save, used for offline progress. */
   savedAt: number;
   moneyCents: number;
@@ -24,8 +39,8 @@ export interface SaveV1 {
   settings: Settings;
 }
 
-export type Save = SaveV1;
-export const CURRENT_SAVE_VERSION: Save['version'] = 1;
+export type Save = SaveV2;
+export const CURRENT_SAVE_VERSION: Save['version'] = 2;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -71,10 +86,11 @@ export function toSave(state: GameState, settings: Settings, now: number): Save 
 }
 
 export function fromSave(save: Save, seed: number): GameState {
-  return {
+  const state: GameState = {
     ...createInitialState(seed),
     moneyCents: save.moneyCents,
     upgrades: { ...save.upgrades },
     stats: { ...save.stats },
   };
+  return { ...state, apprenticeBusyUntil: Array<number>(activeApprentices(state)).fill(0) };
 }

@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { CONFIG } from '../config';
 import { advance, createInitialState } from '../engine';
 import { migrateSave, type Migration } from './migrate';
-import { fromSave, isSave, toSave, type Save, type Settings } from './schema';
+import { stateWith } from '../testHelpers';
+import { fromSave, isSave, toSave, type Save, type SaveV1, type Settings } from './schema';
 import { loadSave, writeSave, type SaveStorage } from './storage';
 
 const settings: Settings = { muted: false, locale: 'en' };
 
 function validSave(): Save {
-  const state = { ...createInitialState(1), moneyCents: 1_234, upgrades: { cord: 2 } };
+  const state = stateWith({ moneyCents: 1_234, upgrades: { cord: 2 } });
   return toSave(state, settings, 1_700_000_000_000);
 }
 
@@ -48,6 +49,11 @@ describe('save schema', () => {
     expect(restored.seed).toBe(77);
   });
 
+  it('seats the apprentices still working when a save is loaded', () => {
+    const save = toSave(stateWith({ upgrades: { apprentice: 3, switchMill: 1 } }), settings, 0);
+    expect(fromSave(save, 1).apprenticeBusyUntil).toEqual([0, 0]);
+  });
+
   it('produces a valid save after fractional frame times', () => {
     const played = advance(createInitialState(4), 1_000 / 60).state;
     const save = toSave(played, settings, 1_700_000_000_000);
@@ -60,7 +66,8 @@ describe('save schema', () => {
     expect(isSave(save)).toBe(true);
     expect(isSave({ ...save, moneyCents: -5 })).toBe(false);
     expect(isSave({ ...save, moneyCents: 1.5 })).toBe(false);
-    expect(isSave({ ...save, upgrades: { cord: 999 } })).toBe(false);
+    expect(isSave({ ...save, upgrades: { ...save.upgrades, cord: 999 } })).toBe(false);
+    expect(isSave({ ...save, upgrades: { cord: 1 } })).toBe(false);
     expect(isSave({ ...save, settings: { muted: false, locale: 'de' } })).toBe(false);
     expect(isSave({ ...save, stats: null })).toBe(false);
   });
@@ -72,28 +79,44 @@ describe('migrateSave', () => {
     expect(migrateSave(JSON.parse(JSON.stringify(save)))).toEqual(save);
   });
 
+  it('upgrades a version 1 save from the first release', () => {
+    const v1: SaveV1 = {
+      version: 1,
+      savedAt: 1_700_000_000_000,
+      moneyCents: 640,
+      upgrades: { cord: 2 },
+      stats: { connected: 40, missed: 3, earnedCents: 900, playMs: 600_000 },
+      settings: { muted: false, locale: 'fr' },
+    };
+    const migrated = migrateSave(JSON.parse(JSON.stringify(v1)));
+    expect(migrated?.version).toBe(2);
+    expect(migrated?.moneyCents).toBe(640);
+    expect(migrated?.upgrades).toEqual({ ...createInitialState(0).upgrades, cord: 2 });
+    expect(migrated?.settings.locale).toBe('fr');
+  });
+
   it('walks a chain of migrations up to the target version', () => {
     const save = validSave();
     const { moneyCents, ...rest } = save;
-    const legacy = { ...rest, version: -1, cash: moneyCents };
+    const legacy = { ...rest, version: 0, cash: moneyCents };
     const chain: Record<number, Migration> = {
-      [-1]: ({ cash, ...old }) => ({ ...old, version: 0, moneyCents: cash }),
-      0: (old) => ({ ...old, version: 1 }),
+      0: ({ cash, ...old }) => ({ ...old, version: 1, moneyCents: cash }),
+      1: (old) => ({ ...old, version: 2 }),
     };
     expect(migrateSave(legacy, chain)).toEqual(save);
   });
 
   it('rejects saves from a newer game, missing steps and garbage', () => {
     expect(migrateSave({ ...validSave(), version: 99 })).toBeNull();
-    expect(migrateSave({ ...validSave(), version: 0 }, {})).toBeNull();
+    expect(migrateSave({ ...validSave(), version: 1 }, {})).toBeNull();
     expect(migrateSave({ version: 'one' })).toBeNull();
     expect(migrateSave(null)).toBeNull();
     expect(migrateSave([1, 2])).toBeNull();
   });
 
   it('rejects a migration that forgets to bump the version', () => {
-    const chain: Record<number, Migration> = { 0: (old) => old };
-    expect(migrateSave({ ...validSave(), version: 0 }, chain)).toBeNull();
+    const chain: Record<number, Migration> = { 1: (old) => old };
+    expect(migrateSave({ ...validSave(), version: 1 }, chain)).toBeNull();
   });
 });
 
