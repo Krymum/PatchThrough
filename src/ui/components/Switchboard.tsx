@@ -78,12 +78,13 @@ export function Switchboard({
           const busy = state.calls.some(
             (call) => call.status === 'connected' && districtOf(call.to) === district,
           );
+          // Only long-distance calls can reach an automatic district.
           return (
             <Cabinet
               key={district}
               district={district}
               busy={busy}
-              awaitingTarget={selectedCall !== null}
+              awaitingTarget={selectedCall !== null && districtOf(selectedCall.from) === 'trunk'}
               onPress={onCabinetPress}
             />
           );
