@@ -72,7 +72,12 @@ export function OperatorDesk({
     ticket = (
       <>
         <Transcript {...listening} />
-        <button type="button" className="button button--quiet" onClick={onStopListening}>
+        <button
+          type="button"
+          className="button button--quiet"
+          aria-keyshortcuts="L Escape"
+          onClick={onStopListening}
+        >
           {ui.stopListening}
         </button>
       </>
@@ -84,7 +89,12 @@ export function OperatorDesk({
           {ui.callerAsks(subscribers[selectedCall.from], subscribers[selectedCall.to])}
         </p>
         <p className="desk__hint">{calleeIsAutomatic ? ui.hintPickSwitch : ui.hintPickLine}</p>
-        <button type="button" className="button button--quiet" onClick={onCancel}>
+        <button
+          type="button"
+          className="button button--quiet"
+          aria-keyshortcuts="Escape"
+          onClick={onCancel}
+        >
           {ui.cancel}
         </button>
       </>
@@ -94,7 +104,7 @@ export function OperatorDesk({
       <>
         <p className="desk__hint">{listenable ? ui.storyOnLine : ui.hintIdle}</p>
         {ringingCount > 0 && (
-          <button type="button" className="button" onClick={onAnswerNext}>
+          <button type="button" className="button" aria-keyshortcuts="A" onClick={onAnswerNext}>
             {ui.answerNext(ringingCount)}
           </button>
         )}
@@ -102,6 +112,7 @@ export function OperatorDesk({
           <button
             type="button"
             className="button button--listen"
+            aria-keyshortcuts="L"
             onClick={() => {
               onListen(listenable.id);
             }}

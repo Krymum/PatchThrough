@@ -1,3 +1,12 @@
+/* Courier Prime, SIL Open Font License 1.1: see src/ui/fonts/OFL.txt. */
+@font-face {
+  font-family: 'Courier Prime';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/courier-prime-latin-400.woff2') format('woff2');
+}
+
 :root {
   --wood-deep: #22150d;
   --wood: #4a2e1a;
@@ -21,7 +30,7 @@
   --focus: #fff3c4;
 
   --font-body: Georgia, 'Times New Roman', serif;
-  --font-type: 'Courier New', Courier, monospace;
+  --font-type: 'Courier Prime', 'Courier New', Courier, monospace;
   --radius: 6px;
   --tap: 44px;
 
@@ -191,8 +200,37 @@ select {
   background: linear-gradient(180deg, var(--brass-light), var(--cord-red) 40%);
 }
 
-.ledger__locale {
+.ledger__sound {
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
   margin-left: auto;
+  padding: 0;
+  border: 1px solid var(--brass-dark);
+  border-radius: var(--radius);
+  background: var(--bakelite);
+  color: var(--paper);
+  cursor: pointer;
+}
+
+.ledger__sound svg {
+  width: 24px;
+}
+
+.ledger__speaker {
+  fill: currentColor;
+}
+
+.ledger__waves {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.ledger__sound[aria-pressed='false'] {
+  color: var(--paper-shade);
 }
 
 .ledger__locale select {
@@ -430,7 +468,7 @@ select {
 
 .cabinet__note {
   grid-column: 1;
-  color: var(--ink-soft);
+  color: var(--ink);
   font-size: 0.8rem;
 }
 

@@ -8,6 +8,8 @@ interface LedgerProps {
   passivePerMinute: number;
   freeCords: number;
   totalCords: number;
+  muted: boolean;
+  onToggleSound: () => void;
   onLocaleChange: (locale: Locale) => void;
 }
 
@@ -16,6 +18,8 @@ export function Ledger({
   passivePerMinute,
   freeCords,
   totalCords,
+  muted,
+  onToggleSound,
   onLocaleChange,
 }: LedgerProps) {
   const { ui, locale } = useContent();
@@ -44,6 +48,22 @@ export function Ledger({
           </dd>
         </div>
       </dl>
+      <button
+        type="button"
+        className="ledger__sound"
+        aria-pressed={!muted}
+        aria-label={ui.sound}
+        onClick={onToggleSound}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path className="ledger__speaker" d="M4 9h4l5-4v14l-5-4H4z" />
+          {muted ? (
+            <path className="ledger__waves" d="M16 9l5 6M21 9l-5 6" />
+          ) : (
+            <path className="ledger__waves" d="M16 8.5q2.5 3.5 0 7M18.5 6q4.5 6 0 12" />
+          )}
+        </svg>
+      </button>
       <label className="ledger__locale">
         <span className="visually-hidden">{ui.language}</span>
         <select

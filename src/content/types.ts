@@ -54,6 +54,7 @@ export interface UiStrings {
   creditsLines: readonly string[];
   newShift: string;
   newShiftConfirm: string;
+  sound: string;
   language: string;
   localeNames: Record<Locale, string>;
   storageUnavailable: string;

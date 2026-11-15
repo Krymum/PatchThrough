@@ -58,13 +58,14 @@ export const fr: Content = {
     creditsTitle: 'Patch Through',
     creditsLines: [
       'Un petit jeu sur un métier qui a disparu.',
-      'Code, textes et dessins ont été créés pour ce jeu.',
+      'Code, textes, dessins et sons ont été créés pour ce jeu.',
       'Larkfield et ses habitants sont fictifs.',
       'Logiciel libre sous licence MIT.',
       'Merci d’avoir assuré le service de nuit.',
     ],
     newShift: 'Commencer un nouveau service',
     newShiftConfirm: 'Touchez encore pour effacer ce service et recommencer',
+    sound: 'Son',
     language: 'Langue',
     localeNames: { en: 'English', fr: 'Français' },
     storageUnavailable:

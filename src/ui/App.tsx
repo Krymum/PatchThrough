@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { cuesFor } from '../audio/cues';
+import { Synth } from '../audio/synth';
 import { CONTENT } from '../content';
 import { freeCords } from '../game/calls';
 import {
@@ -27,11 +29,16 @@ const MS_PER_MINUTE = 60_000;
 export function App() {
   const [notice, setNotice] = useState<Notice | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [synth] = useState(() => new Synth());
 
-  const onEvents = useCallback((events: readonly GameEvent[]) => {
-    const next = noticeFromEvents(events);
-    if (next) setNotice(next);
-  }, []);
+  const onEvents = useCallback(
+    (events: readonly GameEvent[]) => {
+      synth.play(cuesFor(events));
+      const next = noticeFromEvents(events);
+      if (next) setNotice(next);
+    },
+    [synth],
+  );
 
   const game = useGame(onEvents);
   const { state, settings, bootStatus } = game;
@@ -48,8 +55,27 @@ export function App() {
   }, [settings.locale]);
 
   useEffect(() => {
+    synth.setMuted(settings.muted);
+  }, [synth, settings.muted]);
+
+  // Browsers only allow sound after a user gesture.
+  useEffect(() => {
+    const unlock = () => {
+      synth.unlock();
+    };
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, [synth]);
+
+  // Keyboard shortcuts read the latest handlers through a ref.
+  const shortcuts = useRef<(event: KeyboardEvent) => void>(() => undefined);
+  useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setSelectedId(null);
+      shortcuts.current(event);
     };
     window.addEventListener('keydown', onKey);
     return () => {
@@ -122,6 +148,26 @@ export function App() {
       ? { listening: state.listening, call: listeningCall, clock: state.clock }
       : null;
 
+  useEffect(() => {
+    shortcuts.current = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (event.ctrlKey || event.metaKey || event.altKey || target?.tagName === 'SELECT') return;
+      const key = event.key.toLowerCase();
+      if (key === 'escape') {
+        if (state.listening) game.stopListen();
+        setSelectedId(null);
+      } else if (key === 'a' && !ended) {
+        onAnswerNext();
+      } else if (key === 'l' && !ended) {
+        if (state.listening) game.stopListen();
+        else {
+          const latest = listenable.at(-1);
+          if (latest) game.listen(latest.id);
+        }
+      }
+    };
+  });
+
   const callee = selectedCall ? districtOf(selectedCall.to) : null;
   const calleeIsAutomatic = callee !== null && callee !== 'trunk' && isAutomated(state, callee);
 
@@ -140,6 +186,10 @@ export function App() {
           passivePerMinute={passiveIncomeRate(state) * MS_PER_MINUTE}
           freeCords={freeCords(state)}
           totalCords={cordCount(state)}
+          muted={settings.muted}
+          onToggleSound={() => {
+            game.updateSettings({ muted: !settings.muted });
+          }}
           onLocaleChange={(locale) => {
             game.updateSettings({ locale });
           }}
