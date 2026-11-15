@@ -11,7 +11,7 @@ numbers.
 
 **[Play it in your browser](https://krymum.github.io/PatchThrough/)**
 
-![The switchboard in mid-game: Main Street's jacks, Mill Row already behind an automatic switch cabinet, and the supply cupboard](docs/screenshot.png)
+![The switchboard in mid-game: red patch cords run from the keyshelf to Main Street and Hilltop jacks, Mill Row stands behind a grey automatic switch, and the supply ledger sits on the right](docs/screenshot.png)
 
 ## Play
 
@@ -102,10 +102,14 @@ All code, text, graphics and sounds are original to this project. Graphics
 are drawn with SVG and CSS and sounds are synthesised in the browser: the
 game uses no bitmap images and no audio files.
 
-The typewriter face is [Courier Prime](https://github.com/quoteunquoteapps/CourierPrime),
-© The Courier Prime Project Authors, used under the SIL Open Font License 1.1
-(see [src/ui/fonts/OFL.txt](src/ui/fonts/OFL.txt)). The town of Larkfield and everyone in it are
-fictional.
+The typefaces are bundled under the SIL Open Font License 1.1:
+
+- [Big Shoulders](https://github.com/xotypeco/big_shoulders), © The Big Shoulders
+  Project Authors ([licence](src/ui/fonts/BigShoulders-OFL.txt)), for plates and
+  the interface;
+- [Courier Prime](https://github.com/quoteunquoteapps/CourierPrime), © The Courier
+  Prime Project Authors ([licence](src/ui/fonts/CourierPrime-OFL.txt)), for
+  everything typed on paper.
 
 ## License
 
