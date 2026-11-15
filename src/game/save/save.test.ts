@@ -49,6 +49,18 @@ describe('save schema', () => {
     expect(restored.seed).toBe(77);
   });
 
+  it('keeps story progress across a save', () => {
+    const state = stateWith({
+      story: {
+        ...createInitialState(0).story,
+        offered: { ...createInitialState(0).story.offered, looms: 3 },
+        heard: ['looms-1', 'looms-3'],
+      },
+    });
+    const restored = fromSave(toSave(state, settings, 0), 1);
+    expect(restored.story).toEqual(state.story);
+  });
+
   it('seats the apprentices still working when a save is loaded', () => {
     const save = toSave(stateWith({ upgrades: { apprentice: 3, switchMill: 1 } }), settings, 0);
     expect(fromSave(save, 1).apprenticeBusyUntil).toEqual([0, 0]);
@@ -70,6 +82,8 @@ describe('save schema', () => {
     expect(isSave({ ...save, upgrades: { cord: 1 } })).toBe(false);
     expect(isSave({ ...save, settings: { muted: false, locale: 'de' } })).toBe(false);
     expect(isSave({ ...save, stats: null })).toBe(false);
+    expect(isSave({ ...save, story: { ...save.story, heard: ['looms-99'] } })).toBe(false);
+    expect(isSave({ ...save, story: { offered: { looms: 1 }, heard: [] } })).toBe(false);
   });
 });
 
@@ -89,10 +103,11 @@ describe('migrateSave', () => {
       settings: { muted: false, locale: 'fr' },
     };
     const migrated = migrateSave(JSON.parse(JSON.stringify(v1)));
-    expect(migrated?.version).toBe(2);
+    expect(migrated?.version).toBe(3);
     expect(migrated?.moneyCents).toBe(640);
     expect(migrated?.upgrades).toEqual({ ...createInitialState(0).upgrades, cord: 2 });
     expect(migrated?.settings.locale).toBe('fr');
+    expect(migrated?.story).toEqual(createInitialState(0).story);
   });
 
   it('walks a chain of migrations up to the target version', () => {
@@ -102,21 +117,22 @@ describe('migrateSave', () => {
     const chain: Record<number, Migration> = {
       0: ({ cash, ...old }) => ({ ...old, version: 1, moneyCents: cash }),
       1: (old) => ({ ...old, version: 2 }),
+      2: (old) => ({ ...old, version: 3 }),
     };
     expect(migrateSave(legacy, chain)).toEqual(save);
   });
 
   it('rejects saves from a newer game, missing steps and garbage', () => {
     expect(migrateSave({ ...validSave(), version: 99 })).toBeNull();
-    expect(migrateSave({ ...validSave(), version: 1 }, {})).toBeNull();
+    expect(migrateSave({ ...validSave(), version: 2 }, {})).toBeNull();
     expect(migrateSave({ version: 'one' })).toBeNull();
     expect(migrateSave(null)).toBeNull();
     expect(migrateSave([1, 2])).toBeNull();
   });
 
   it('rejects a migration that forgets to bump the version', () => {
-    const chain: Record<number, Migration> = { 1: (old) => old };
-    expect(migrateSave({ ...validSave(), version: 1 }, chain)).toBeNull();
+    const chain: Record<number, Migration> = { 2: (old) => old };
+    expect(migrateSave({ ...validSave(), version: 2 }, chain)).toBeNull();
   });
 });
 

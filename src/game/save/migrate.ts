@@ -1,3 +1,4 @@
+import { PLOT_IDS } from '../story';
 import { UPGRADE_IDS } from '../types';
 import { CURRENT_SAVE_VERSION, isSave, type Save } from './schema';
 
@@ -17,6 +18,12 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
     const upgrades = Object.fromEntries(UPGRADE_IDS.map((id) => [id, 0]));
     return { ...v1, version: 2, upgrades: { ...upgrades, ...old } };
   },
+  // v2 → v3: stories begin. Plots of districts already automated stay untold.
+  2: (v2) => ({
+    ...v2,
+    version: 3,
+    story: { offered: Object.fromEntries(PLOT_IDS.map((id) => [id, 0])), heard: [] },
+  }),
 };
 
 /**
