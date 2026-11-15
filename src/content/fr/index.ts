@@ -1,4 +1,5 @@
 import type { Content } from '../types';
+import { stories } from './stories';
 
 export const fr: Content = {
   ui: {
@@ -36,9 +37,34 @@ export const fr: Content = {
     welcomeBackNothing: (duration) =>
       `Absence de ${duration}. Personne n’a répondu au standard pendant ce temps.`,
     dismiss: 'Reprendre le travail',
+    listenIn: (caller, callee) => `Écouter : ${caller} et ${callee}`,
+    storyOnLine: 'Une conversation qui vaut la peine est en ligne.',
+    listeningTo: (caller, callee) => `En ligne avec ${caller} et ${callee}…`,
+    stopListening: 'Retirer l’écouteur',
+    busyListening: 'Vous écoutez. Retirez l’écouteur pour reprendre le standard.',
+    storyHeld: (district) => `Pas encore : ${district} a encore des choses à dire.`,
     endedTitle: 'Le standard se tait',
     endedText:
       'Larkfield compose désormais seule ses appels, proches et lointains. Votre poste est supprimé.',
+    whatBecameTitle: 'Ce qu’ils sont devenus',
+    heardOf: (heard, total) =>
+      `Vous avez écouté ${heard} conversation${heard > 1 ? 's' : ''} sur ${total}.`,
+    statsTitle: 'Votre dernier service',
+    statConnected: (count) => `${count.toLocaleString('fr-FR')} appels connectés`,
+    statMissed: (count) => `${count.toLocaleString('fr-FR')} abonnés qui ont raccroché`,
+    statPlayed: (duration) => `${duration} au standard`,
+    statHeard: (heard, total) =>
+      `${heard} conversation${heard > 1 ? 's' : ''} sur ${total} écoutée${heard > 1 ? 's' : ''}`,
+    creditsTitle: 'Patch Through',
+    creditsLines: [
+      'Un petit jeu sur un métier qui a disparu.',
+      'Code, textes et dessins ont été créés pour ce jeu.',
+      'Larkfield et ses habitants sont fictifs.',
+      'Logiciel libre sous licence MIT.',
+      'Merci d’avoir assuré le service de nuit.',
+    ],
+    newShift: 'Commencer un nouveau service',
+    newShiftConfirm: 'Touchez encore pour effacer ce service et recommencer',
     language: 'Langue',
     localeNames: { en: 'English', fr: 'Français' },
     storageUnavailable:
@@ -130,4 +156,5 @@ export const fr: Content = {
     },
   },
   apprentices: ['Ruth', 'Edna', 'Lois', 'June'],
+  stories,
 };

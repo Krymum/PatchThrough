@@ -1,4 +1,5 @@
 import type { Content } from '../types';
+import { stories } from './stories';
 
 export const en: Content = {
   ui: {
@@ -36,8 +37,31 @@ export const en: Content = {
     welcomeBackNothing: (duration) =>
       `You were away ${duration}. Nobody answered the board while you were gone.`,
     dismiss: 'Back to work',
+    listenIn: (caller, callee) => `Listen in: ${caller} and ${callee}`,
+    storyOnLine: 'A conversation worth hearing is on the line.',
+    listeningTo: (caller, callee) => `On the line with ${caller} and ${callee}…`,
+    stopListening: 'Take off the earpiece',
+    busyListening: 'You are listening in. Take off the earpiece to work the board.',
+    storyHeld: (district) => `Not yet: ${district} still has things to say.`,
     endedTitle: 'The board falls silent',
     endedText: 'Larkfield now dials its own calls, near and far. Your position has been abolished.',
+    whatBecameTitle: 'What became of them',
+    heardOf: (heard, total) => `You listened to ${heard} of ${total} conversations.`,
+    statsTitle: 'Your last shift',
+    statConnected: (count) => `${count.toLocaleString('en-US')} calls connected`,
+    statMissed: (count) => `${count.toLocaleString('en-US')} callers who hung up`,
+    statPlayed: (duration) => `${duration} at the board`,
+    statHeard: (heard, total) => `${heard} of ${total} conversations heard`,
+    creditsTitle: 'Patch Through',
+    creditsLines: [
+      'A small game about a job that disappeared.',
+      'Code, words and drawings were made for this game.',
+      'Larkfield and everyone in it are fictional.',
+      'Free software under the MIT licence.',
+      'Thank you for working the night shift.',
+    ],
+    newShift: 'Start a new shift',
+    newShiftConfirm: 'Tap again to erase this shift and start over',
     language: 'Language',
     localeNames: { en: 'English', fr: 'Français' },
     storageUnavailable: 'Your browser blocks storage: progress will not be saved.',
@@ -124,4 +148,5 @@ export const en: Content = {
     },
   },
   apprentices: ['Ruth', 'Edna', 'Lois', 'June'],
+  stories,
 };
