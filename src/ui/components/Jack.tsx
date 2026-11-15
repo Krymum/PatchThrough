@@ -11,13 +11,15 @@ interface JackProps {
   patience: number;
   selected: boolean;
   awaitingTarget: boolean;
+  /** A conversation worth hearing is going on through this jack. */
+  story: boolean;
   onPress: (id: SubscriberId) => void;
 }
 
 const GAUGE_RADIUS = 15;
 const GAUGE_LENGTH = 2 * Math.PI * GAUGE_RADIUS;
 
-export function Jack({ id, line, patience, selected, awaitingTarget, onPress }: JackProps) {
+export function Jack({ id, line, patience, selected, awaitingTarget, story, onPress }: JackProps) {
   const { ui, subscribers } = useContent();
   const name = subscribers[id];
   const status = line === 'idle' ? ui.idle : line === 'ringing' ? ui.ringing : ui.onTheLine;
@@ -29,10 +31,10 @@ export function Jack({ id, line, patience, selected, awaitingTarget, onPress }: 
         type="button"
         className={`jack jack--${line}${selected ? ' jack--selected' : ''}${
           awaitingTarget ? ' jack--target' : ''
-        }`}
+        }${story ? ' jack--story' : ''}`}
         aria-pressed={selected}
         data-subscriber={id}
-        aria-label={`${name}, ${status}`}
+        aria-label={`${name}, ${status}${story ? `, ${ui.storyOnLine}` : ''}`}
         onClick={() => {
           onPress(id);
         }}
@@ -51,6 +53,7 @@ export function Jack({ id, line, patience, selected, awaitingTarget, onPress }: 
               transform="rotate(-90 20 20)"
             />
           )}
+          {story && <path className="jack__murmur" d="M31 12 q4 8 0 16 M35 9 q6 11 0 22" />}
           <circle className="jack__ring" cx="20" cy="60" r="11" />
           <circle className="jack__hole" cx="20" cy="60" r="5" />
           {connected && (

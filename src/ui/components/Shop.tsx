@@ -1,4 +1,5 @@
 import type { GameState, UpgradeId } from '../../game/types';
+import { PLOTS, plotHoldingUpgrade } from '../../game/story';
 import { availableUpgrades, canBuyUpgrade, nextUpgradeCost } from '../../game/upgrades';
 import { useContent } from '../ContentContext';
 import { formatMoney } from '../format';
@@ -9,7 +10,7 @@ interface ShopProps {
 }
 
 export function Shop({ state, onBuy }: ShopProps) {
-  const { ui, upgrades, locale } = useContent();
+  const { ui, upgrades, districts, locale } = useContent();
   const offers = availableUpgrades(state);
   if (offers.length === 0) return null;
 
@@ -19,11 +20,15 @@ export function Shop({ state, onBuy }: ShopProps) {
       <ul className="shop__list">
         {offers.map((id) => {
           const cost = nextUpgradeCost(state, id) ?? 0;
+          const heldBy = plotHoldingUpgrade(state, id);
           return (
             <li key={id} className="shop__item">
               <div>
                 <h3>{upgrades[id].name}</h3>
                 <p>{upgrades[id].description}</p>
+                {heldBy && (
+                  <p className="shop__held">{ui.storyHeld(districts[PLOTS[heldBy].district])}</p>
+                )}
               </div>
               <button
                 type="button"

@@ -231,19 +231,6 @@ select {
   font-style: italic;
 }
 
-.ended {
-  padding: 32px 20px;
-  border-radius: 10px;
-  background: var(--bakelite);
-  text-align: center;
-}
-
-.ended h2 {
-  margin-bottom: 12px;
-  color: var(--brass-light);
-  font-variant: small-caps;
-}
-
 /* Switchboard ----------------------------------------------------------- */
 
 .app__board {
@@ -617,9 +604,136 @@ select {
   font-size: 0.85rem;
 }
 
+/* Listening ------------------------------------------------------------- */
+
+.jack__murmur {
+  fill: none;
+  stroke: var(--brass-light);
+  stroke-width: 2;
+  stroke-linecap: round;
+  animation: murmur 1.6s ease-in-out infinite;
+}
+
+@keyframes murmur {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.button--listen {
+  border-color: var(--brass);
+  background: var(--bakelite);
+  color: var(--brass-light);
+}
+
+.desk--listening {
+  border-top-color: var(--brass-light);
+}
+
+.transcript {
+  flex: 1 1 100%;
+}
+
+.transcript__title {
+  color: var(--paper-shade);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.transcript__lines {
+  display: grid;
+  gap: 4px;
+  max-height: 40vh;
+  margin: 6px 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.transcript__lines li {
+  color: var(--paper);
+  font-family: var(--font-type);
+  font-size: 0.88rem;
+}
+
+.transcript__speaker {
+  display: block;
+  color: var(--amber);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.shop__held {
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Credits --------------------------------------------------------------- */
+
+.credits {
+  display: grid;
+  gap: 14px;
+  padding: 28px 20px;
+  border-radius: 10px;
+  background: var(--bakelite);
+}
+
+.credits h2 {
+  color: var(--brass-light);
+  font-size: 1.5rem;
+  font-variant: small-caps;
+  text-align: center;
+}
+
+.credits h3 {
+  margin-top: 12px;
+  color: var(--brass);
+  font-size: 0.8rem;
+  font-weight: normal;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.credits__lead {
+  font-style: italic;
+  text-align: center;
+}
+
+.credits__epilogues {
+  display: grid;
+  gap: 14px;
+}
+
+.credits__epilogues h4 {
+  margin: 0 0 2px;
+  color: var(--paper);
+}
+
+.credits__heard,
+.credits__stats {
+  color: var(--paper-shade);
+  font-size: 0.85rem;
+}
+
+.credits__roll {
+  display: grid;
+  gap: 4px;
+  margin: 16px 0;
+  color: var(--paper-shade);
+  text-align: center;
+}
+
+.credits__name {
+  color: var(--brass-light);
+  font-size: 1.2rem;
+  font-variant: small-caps;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .jack--ringing .jack__lamp,
-  .cabinet__relay {
+  .cabinet__relay,
+  .jack__murmur {
     animation: none;
   }
 }

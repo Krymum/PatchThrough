@@ -13,7 +13,8 @@ export type Notice =
   | { kind: 'lost'; from: SubscriberId }
   | { kind: 'connected'; from: SubscriberId; to: SubscriberId; payoutCents: number }
   | { kind: 'wrong-line'; to: SubscriberId }
-  | { kind: 'no-free-cord' };
+  | { kind: 'no-free-cord' }
+  | { kind: 'busy-listening' };
 
 /** The notice worth showing for a batch of engine events, if any. */
 export function noticeFromEvents(events: readonly GameEvent[]): Notice | null {
@@ -50,5 +51,7 @@ export function noticeText(notice: Notice, { ui, subscribers }: Content, locale:
       return ui.wrongLine(subscribers[notice.to]);
     case 'no-free-cord':
       return ui.noFreeCord;
+    case 'busy-listening':
+      return ui.busyListening;
   }
 }

@@ -6,6 +6,7 @@ import type { SubscriberId } from '../../game/directory';
 import { advance, createInitialState } from '../../game/engine';
 import { applyOfflineProgress, offlineProgress, type OfflineReport } from '../../game/offline';
 import { createSeed } from '../../game/rng';
+import { startListening, stopListening } from '../../game/story';
 import { fromSave, toSave, type Settings } from '../../game/save/schema';
 import {
   browserStorage,
@@ -65,7 +66,11 @@ export interface GameController {
   away: OfflineReport | null;
   dismissAway: () => void;
   connect: (callId: number, target: SubscriberId) => ConnectOutcome;
+  listen: (callId: number) => void;
+  stopListen: () => void;
   buy: (upgrade: UpgradeId) => void;
+  /** Erases the current shift and starts a new game; settings are kept. */
+  newShift: () => void;
   updateSettings: (patch: Partial<Settings>) => void;
 }
 
@@ -149,6 +154,23 @@ export function useGame(onEvents: (events: readonly GameEvent[]) => void): GameC
     [commit],
   );
 
+  const listen = useCallback(
+    (callId: number) => {
+      commit(startListening(stateRef.current, callId));
+    },
+    [commit],
+  );
+
+  const stopListen = useCallback(() => {
+    commit(stopListening(stateRef.current));
+  }, [commit]);
+
+  const newShift = useCallback(() => {
+    commit({ state: createInitialState(createSeed()), events: [] });
+    setAway(null);
+    persist();
+  }, [commit, persist]);
+
   const buy = useCallback(
     (upgrade: UpgradeId) => {
       commit(buyUpgrade(stateRef.current, upgrade));
@@ -177,7 +199,10 @@ export function useGame(onEvents: (events: readonly GameEvent[]) => void): GameC
     away,
     dismissAway,
     connect,
+    listen,
+    stopListen,
     buy,
+    newShift,
     updateSettings,
   };
 }

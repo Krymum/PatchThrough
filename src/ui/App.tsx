@@ -8,13 +8,15 @@ import {
   type SubscriberId,
 } from '../game/directory';
 import { hasEnded, isAutomated, passiveIncomeRate } from '../game/progression';
+import { listenableCalls } from '../game/story';
 import type { GameEvent } from '../game/types';
 import { cordCount } from '../game/upgrades';
 import { ContentContext } from './ContentContext';
 import { AwayNotice } from './components/AwayNotice';
 import { Colleagues } from './components/Colleagues';
+import { Credits } from './components/Credits';
 import { Ledger } from './components/Ledger';
-import { OperatorDesk } from './components/OperatorDesk';
+import { OperatorDesk, type ListeningView } from './components/OperatorDesk';
 import { Shop } from './components/Shop';
 import { Switchboard } from './components/Switchboard';
 import { useGame } from './hooks/useGame';
@@ -60,13 +62,26 @@ export function App() {
     const outcome = game.connect(selectedCall.id, target);
     if (outcome === 'wrong-line') setNotice({ kind: 'wrong-line', to: selectedCall.to });
     if (outcome === 'no-free-cord') setNotice({ kind: 'no-free-cord' });
+    if (outcome === 'listening') setNotice({ kind: 'busy-listening' });
     if (outcome === 'connected') setSelectedId(null);
   };
 
+  const listenable = listenableCalls(state);
+
   const onJackPress = (id: SubscriberId) => {
+    if (state.listening) {
+      setNotice({ kind: 'busy-listening' });
+      return;
+    }
     if (!selectedCall) {
       const caller = state.calls.find((call) => call.status === 'ringing' && call.from === id);
-      if (caller) setSelectedId(caller.id);
+      if (caller) {
+        setSelectedId(caller.id);
+        return;
+      }
+      // Pressing a jack that carries a conversation worth hearing listens in.
+      const story = listenable.find((call) => call.from === id || call.to === id);
+      if (story) game.listen(story.id);
       return;
     }
     if (id === selectedCall.from) {
@@ -90,6 +105,7 @@ export function App() {
   // On small screens the oldest lamp may be scrolled away: select it and bring it into view.
   const onAnswerNext = () => {
     const oldest = ringing[0];
+    if (state.listening) return;
     if (!oldest) return;
     setSelectedId(oldest.id);
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -97,6 +113,14 @@ export function App() {
       .querySelector(`[data-subscriber="${oldest.from}"]`)
       ?.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
   };
+
+  const listeningCall = state.listening
+    ? state.calls.find((call) => call.id === state.listening?.callId)
+    : undefined;
+  const listening: ListeningView | null =
+    state.listening && listeningCall
+      ? { listening: state.listening, call: listeningCall, clock: state.clock }
+      : null;
 
   const callee = selectedCall ? districtOf(selectedCall.to) : null;
   const calleeIsAutomatic = callee !== null && callee !== 'trunk' && isAutomated(state, callee);
@@ -128,10 +152,14 @@ export function App() {
         {game.away && <AwayNotice report={game.away} onDismiss={game.dismissAway} />}
         <main className="app__main">
           {ended ? (
-            <section className="ended" aria-labelledby="ended-title">
-              <h2 id="ended-title">{content.ui.endedTitle}</h2>
-              <p>{content.ui.endedText}</p>
-            </section>
+            <Credits
+              state={state}
+              onNewShift={() => {
+                setSelectedId(null);
+                setNotice(null);
+                game.newShift();
+              }}
+            />
           ) : (
             <div className="app__board">
               <Switchboard
@@ -150,8 +178,12 @@ export function App() {
             selectedCall={selectedCall}
             calleeIsAutomatic={calleeIsAutomatic}
             ringingCount={ringing.length}
+            listening={listening}
+            listenable={listenable.at(-1) ?? null}
             notice={notice}
             onAnswerNext={onAnswerNext}
+            onListen={game.listen}
+            onStopListening={game.stopListen}
             onCancel={() => {
               setSelectedId(null);
             }}

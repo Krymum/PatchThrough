@@ -41,6 +41,7 @@ export function Switchboard({
   const { ui, districts } = useContent();
   const lines = visibleLines(state.calls);
   const patience = patienceMs(state);
+  const heard = new Set(state.story.heard);
   const panels: DistrictId[] = [
     ...LOCAL_DISTRICTS.filter((d) => isOpen(state, d)),
     ...manualDistricts(state).filter((d) => d === 'trunk'),
@@ -64,6 +65,7 @@ export function Switchboard({
         }
         selected={selectedCall?.from === id}
         awaitingTarget={selectedCall !== null && selectedCall.from !== id}
+        story={call?.status === 'connected' && call.fragment !== null && !heard.has(call.fragment)}
         onPress={onJackPress}
       />
     );
