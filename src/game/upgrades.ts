@@ -1,6 +1,7 @@
 import { CONFIG } from './config';
 import { districtOf } from './directory';
 import { AUTOMATED_BY, activeApprentices, hasEnded } from './progression';
+import { plotHoldingUpgrade } from './story';
 import { UPGRADE_IDS, type GameState, type StepResult, type UpgradeId } from './types';
 
 /** Price of the next level of an upgrade, or null when it is maxed out. */
@@ -32,6 +33,7 @@ export function canBuyUpgrade(state: GameState, upgrade: UpgradeId): boolean {
   return (
     !hasEnded(state) &&
     isUpgradeUnlocked(state, upgrade) &&
+    plotHoldingUpgrade(state, upgrade) === null &&
     cost !== null &&
     state.moneyCents >= cost
   );

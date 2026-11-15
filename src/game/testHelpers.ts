@@ -1,7 +1,19 @@
 /** Builders shared by the game's unit tests. */
 
 import { createInitialState } from './engine';
-import type { Call, GameState, UpgradeId } from './types';
+import { PLOTS, PLOT_IDS } from './story';
+import type { Call, GameState, StoryProgress, UpgradeId } from './types';
+
+/** Story progress where every plot has been fully placed, so nothing holds a switch back. */
+export function toldStory(): StoryProgress {
+  return {
+    offered: Object.fromEntries(PLOT_IDS.map((id) => [id, PLOTS[id].fragments.length])) as Record<
+      (typeof PLOT_IDS)[number],
+      number
+    >,
+    heard: [],
+  };
+}
 
 export function stateWith(
   overrides: Partial<Omit<GameState, 'upgrades'>> & {
@@ -23,6 +35,7 @@ export function ringingCall(id: number, overrides: Partial<Call> = {}): Call {
     expiresAt: 10_000,
     endsAt: null,
     handler: null,
+    fragment: null,
     ...overrides,
   };
 }

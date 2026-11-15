@@ -8,6 +8,7 @@ import {
 } from './directory';
 import { manualCallRate, manualDistricts, patienceMs, isOpen } from './progression';
 import { nextRandom, randomInt } from './rng';
+import { dueFragment, noteFragmentOffered, noteStoryCallPlaced, type FragmentId } from './story';
 import type { Call, GameEvent, GameState, Handler, StepResult } from './types';
 import { cordCount } from './upgrades';
 
@@ -58,6 +59,11 @@ export function spawnCall(state: GameState): StepResult {
   const base: GameState = { ...state, seed: delay.seed, nextCallAt: state.clock + delay.delayMs };
   const busy = busyLines(state.calls);
 
+  const story = dueFragment(base, busy);
+  if (story) {
+    return ring(noteStoryCallPlaced(base, story.id), story.from, story.to, story.id);
+  }
+
   const candidates = manualDistricts(state)
     .map((district) => ({
       district,
@@ -84,7 +90,16 @@ export function spawnCall(state: GameState): StepResult {
   const toDraw = randomInt(fromDraw.seed, 0, callees.length - 1);
   const to = callees[toDraw.value];
   if (to === undefined) return { state: { ...base, seed: toDraw.seed }, events: [] };
+  return ring({ ...base, seed: toDraw.seed }, from, to, null);
+}
 
+/** Lights the caller's lamp. */
+function ring(
+  state: GameState,
+  from: SubscriberId,
+  to: SubscriberId,
+  fragment: FragmentId | null,
+): StepResult {
   const call: Call = {
     id: state.nextCallId,
     from,
@@ -94,14 +109,10 @@ export function spawnCall(state: GameState): StepResult {
     expiresAt: state.clock + patienceMs(state),
     endsAt: null,
     handler: null,
+    fragment,
   };
   return {
-    state: {
-      ...base,
-      seed: toDraw.seed,
-      calls: [...state.calls, call],
-      nextCallId: state.nextCallId + 1,
-    },
+    state: { ...state, calls: [...state.calls, call], nextCallId: state.nextCallId + 1 },
     events: [{ type: 'call-incoming', callId: call.id, from }],
   };
 }
@@ -139,16 +150,18 @@ export function payoutFor(call: Pick<Call, 'from'>): number {
 function plug(state: GameState, call: Call, handler: Handler): StepResult {
   const { minDurationMs, maxDurationMs } = CONFIG.calls;
   const duration = randomInt(state.seed, minDurationMs, maxDurationMs);
+  const length = call.fragment ? Math.max(duration.value, CONFIG.story.minCallMs) : duration.value;
   const payoutCents = payoutFor(call);
   const connected: Call = {
     ...call,
     status: 'connected',
-    endsAt: state.clock + duration.value,
+    endsAt: state.clock + length,
     handler,
   };
+  const told = call.fragment ? noteFragmentOffered(state, call.fragment) : state;
   return {
     state: {
-      ...state,
+      ...told,
       seed: duration.seed,
       moneyCents: state.moneyCents + payoutCents,
       calls: state.calls.map((c) => (c.id === call.id ? connected : c)),
@@ -171,7 +184,8 @@ function plug(state: GameState, call: Call, handler: Handler): StepResult {
   };
 }
 
-export type ConnectOutcome = 'connected' | 'not-ringing' | 'wrong-line' | 'no-free-cord';
+export type ConnectOutcome =
+  'connected' | 'not-ringing' | 'wrong-line' | 'no-free-cord' | 'listening';
 
 export interface ConnectResult extends StepResult {
   outcome: ConnectOutcome;
@@ -179,9 +193,13 @@ export interface ConnectResult extends StepResult {
 
 /**
  * The operator plugs a ringing call into a destination jack. Only the jack
- * the caller asked for completes the call, and a free cord pair is needed.
+ * the caller asked for completes the call, a free cord pair is needed, and
+ * the operator must not be listening in on another line.
  */
 export function connectCall(state: GameState, callId: number, target: SubscriberId): ConnectResult {
+  if (state.listening) {
+    return { state, events: [], outcome: 'listening' };
+  }
   const call = state.calls.find((c) => c.id === callId);
   if (call?.status !== 'ringing') {
     return { state, events: [], outcome: 'not-ringing' };

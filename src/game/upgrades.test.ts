@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG } from './config';
-import { connectedCall, ringingCall, stateWith } from './testHelpers';
+import { connectedCall, ringingCall, stateWith, toldStory } from './testHelpers';
 import { UPGRADE_IDS } from './types';
 import {
   availableUpgrades,
@@ -57,6 +57,17 @@ describe('buyUpgrade', () => {
     expect(result.events).toEqual([]);
   });
 
+  it("waits for a district's story to be told before automating it", () => {
+    const upgrades = { extendMill: 1, extendHill: 1, extendRiver: 1, apprentice: 2 };
+    const untold = stateWith({ moneyCents: 1e9, upgrades });
+    expect(availableUpgrades(untold)).toContain('switchMill');
+    expect(canBuyUpgrade(untold, 'switchMill')).toBe(false);
+    expect(buyUpgrade(untold, 'switchMill').state).toBe(untold);
+
+    const told = stateWith({ moneyCents: 1e9, upgrades, story: toldStory() });
+    expect(canBuyUpgrade(told, 'switchMill')).toBe(true);
+  });
+
   it('cannot be bought while locked, even with money', () => {
     const state = stateWith({ moneyCents: 1e9 });
     expect(buyUpgrade(state, 'switchMill').state).toBe(state);
@@ -92,6 +103,7 @@ describe('buyUpgrade', () => {
     const state = stateWith({
       moneyCents: 1e9,
       calls,
+      story: toldStory(),
       apprenticeBusyUntil: [0, 0],
       upgrades: { extendMill: 1, extendHill: 1, extendRiver: 1, apprentice: 2 },
     });
@@ -103,6 +115,7 @@ describe('buyUpgrade', () => {
   it('keeps apprentice seats in line with automations already built', () => {
     const state = stateWith({
       moneyCents: 1e9,
+      story: toldStory(),
       upgrades: { extendMill: 1, apprentice: 2, switchMill: 1, switchHill: 1 },
     });
     const { state: next } = buyUpgrade(state, 'apprentice');
@@ -112,6 +125,7 @@ describe('buyUpgrade', () => {
   it('clears the board when the automatic exchange arrives', () => {
     const state = stateWith({
       moneyCents: 1e9,
+      story: toldStory(),
       calls: [ringingCall(1, { from: 'longDistance', to: 'grocer' })],
       apprenticeBusyUntil: [0],
       upgrades: { dial: 1 },

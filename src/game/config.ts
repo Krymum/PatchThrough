@@ -92,6 +92,17 @@ export const CONFIG = {
     automaticExchange: { costsCents: [350_000], requires: { dial: 1 } },
   } satisfies Record<UpgradeId, UpgradeConfig>,
 
+  story: {
+    /** Listening to a conversation from start to finish takes this long. */
+    listenMs: 12 * SECOND,
+    /** Story calls stay on the line at least this long, so there is time to listen. */
+    minCallMs: 26 * SECOND,
+    /** At least this long between two story calls, whatever the plot. */
+    callGapMs: 45 * SECOND,
+    /** At least this long between two fragments of the same plot. */
+    plotGapMs: 5 * MINUTE,
+  },
+
   offline: {
     /** Absences shorter than this are not worth a welcome-back summary. */
     minAwayMs: MINUTE,

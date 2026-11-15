@@ -1,6 +1,7 @@
 import { assignApprentices, settleCalls, spawnCall } from './calls';
 import { CONFIG } from './config';
 import { automatedIncomeRate } from './progression';
+import { listeningEndsAt, settleListening } from './story';
 import type { GameEvent, GameState, StepResult } from './types';
 
 export function createInitialState(seed: number): GameState {
@@ -29,6 +30,13 @@ export function createInitialState(seed: number): GameState {
     // A first call arrives quickly so a new player is not left waiting.
     nextCallAt: CONFIG.calls.firstCallMs,
     apprenticeBusyUntil: [],
+    story: {
+      offered: { looms: 0, waltz: 0, crossing: 0, grocery: 0, longDistance: 0 },
+      heard: [],
+    },
+    listening: null,
+    storyReadyAt: 0,
+    plotReadyAt: {},
   };
 }
 
@@ -37,7 +45,7 @@ export function createInitialState(seed: number): GameState {
  * an arrival, a deadline, or an apprentice ready to take a waiting call.
  */
 function nextEventTime(state: GameState): number {
-  let time = state.nextCallAt;
+  let time = Math.min(state.nextCallAt, listeningEndsAt(state));
   const hasApprentices = state.apprenticeBusyUntil.length > 0;
   for (const call of state.calls) {
     if (call.status === 'ringing') {
@@ -87,6 +95,9 @@ export function advance(state: GameState, dtMs: number): StepResult {
     const settled = settleCalls(next);
     next = settled.state;
     events.push(...settled.events);
+    const listened = settleListening(next);
+    next = listened.state;
+    events.push(...listened.events);
     if (next.clock >= next.nextCallAt) {
       const spawned = spawnCall(next);
       next = spawned.state;
