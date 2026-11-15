@@ -63,7 +63,7 @@ export function spawnCall(state: GameState): StepResult {
       calls: [...state.calls, call],
       nextCallId: state.nextCallId + 1,
     },
-    events: [{ type: 'call-incoming', callId: call.id }],
+    events: [{ type: 'call-incoming', callId: call.id, from }],
   };
 }
 
@@ -74,7 +74,7 @@ export function settleCalls(state: GameState): StepResult {
   const calls = state.calls.filter((call) => {
     if (call.status === 'ringing' && state.clock >= call.expiresAt) {
       missed += 1;
-      events.push({ type: 'call-lost', callId: call.id });
+      events.push({ type: 'call-lost', callId: call.id, from: call.from });
       return false;
     }
     if (call.status === 'connected' && call.endsAt !== null && state.clock >= call.endsAt) {
@@ -129,7 +129,7 @@ export function connectCall(state: GameState, callId: number, target: Subscriber
         earnedCents: state.stats.earnedCents + payoutCents,
       },
     },
-    events: [{ type: 'call-connected', callId, payoutCents }],
+    events: [{ type: 'call-connected', callId, from: call.from, to: call.to, payoutCents }],
     outcome: 'connected',
   };
 }

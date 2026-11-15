@@ -29,7 +29,7 @@ describe('spawnCall', () => {
     expect(call?.status).toBe('ringing');
     expect(call?.from).not.toBe(call?.to);
     expect(call?.expiresAt).toBe(1_000 + CONFIG.calls.patienceMs);
-    expect(events).toEqual([{ type: 'call-incoming', callId: 1 }]);
+    expect(events).toEqual([{ type: 'call-incoming', callId: 1, from: call?.from }]);
     expect(state.nextCallId).toBe(2);
   });
 
@@ -69,7 +69,7 @@ describe('settleCalls', () => {
     const result = settleCalls(state);
     expect(result.state.calls).toEqual([]);
     expect(result.state.stats.missed).toBe(1);
-    expect(result.events).toEqual([{ type: 'call-lost', callId: 1 }]);
+    expect(result.events).toEqual([{ type: 'call-lost', callId: 1, from: 'grocer' }]);
   });
 
   it('hangs up finished conversations without counting a miss', () => {
@@ -98,6 +98,15 @@ describe('connectCall', () => {
     expect(result.state.moneyCents).toBe(CONFIG.calls.payoutCents);
     expect(result.state.stats.connected).toBe(1);
     expect(result.state.stats.earnedCents).toBe(CONFIG.calls.payoutCents);
+    expect(result.events).toEqual([
+      {
+        type: 'call-connected',
+        callId: 1,
+        from: 'grocer',
+        to: 'doctor',
+        payoutCents: CONFIG.calls.payoutCents,
+      },
+    ]);
   });
 
   it('refuses the wrong destination without changing anything', () => {

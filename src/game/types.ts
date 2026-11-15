@@ -36,9 +36,15 @@ export interface GameState {
 }
 
 export type GameEvent =
-  | { type: 'call-incoming'; callId: number }
-  | { type: 'call-lost'; callId: number }
-  | { type: 'call-connected'; callId: number; payoutCents: number }
+  | { type: 'call-incoming'; callId: number; from: SubscriberId }
+  | { type: 'call-lost'; callId: number; from: SubscriberId }
+  | {
+      type: 'call-connected';
+      callId: number;
+      from: SubscriberId;
+      to: SubscriberId;
+      payoutCents: number;
+    }
   | { type: 'call-ended'; callId: number }
   | { type: 'upgrade-bought'; upgrade: UpgradeId; level: number };
 
