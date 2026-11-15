@@ -9,14 +9,19 @@ It has an ending. The exchange goes fully automatic, the position is
 abolished, and the credits roll. There is no prestige loop and no exploding
 numbers.
 
-> Work in progress: the whole progression is playable, from the first lamp
-> to the automatic exchange. Stories, sound and final art are on the way.
+> Work in progress: the whole game is playable, from the first lamp to the
+> credits. Sound and final art are on the way.
 
 ## Play
 
 The game runs in any modern browser, on desktop or phone. Tap (or click) a
 lit lamp to answer, then tap the jack the caller asks for. Keyboard players
 can use <kbd>Tab</kbd>, <kbd>Enter</kbd> and <kbd>Escape</kbd>.
+
+Now and then a call carries a conversation worth hearing. Listen in and
+you follow five small stories of the town, but while you listen you cannot
+work the board. Lamps keep ringing. A district is never automated before
+its story has been told, whether or not you listened.
 
 Progress is saved in your browser's local storage. Apprentices and automatic
 switches keep earning while you are away, at half rate and for up to four
@@ -58,6 +63,7 @@ src/
     config.ts       Every balance value, in one place.
     engine.ts       Event-driven, seeded simulation (deterministic).
     progression.ts  Districts, apprentices and income, derived from purchases.
+    story.ts        Plots, story calls and listening in.
     offline.ts      Capped catch-up for time spent away.
     save/           Versioned save format, migrations, guarded storage access.
   content/   All player-facing text. English is the reference; French is
